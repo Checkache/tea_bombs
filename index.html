@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чайные бомбочки купить в Москве | Наборы ручной работы Tea Bombs</title>
+  <meta name="description"
+    content="Натуральные чайные бомбочки из изомальта. Подарочная упаковка. Доставка по Москве. Закажите на сайте!">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Loader -->
+  <div id="page-loader" class="page-loader">
+    <div class="spinner"></div>
+    <p>Загрузка...</p>
+  </div>
+
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="header-inner">
+      <a href="#" class="logo font-accent">Tea Bombs•Moscow•</a>
+
+      <button class="cart-btn" id="cartBtn" aria-label="Корзина">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Открыть меню">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav>
+        <ul class="nav" id="nav">
+          <li><a href="#hero">Главная</a></li>
+          <li><a href="#catalog">Каталог</a></li>
+          <li><a href="#tea-menu">Чайная карта</a></li>
+          <li><a href="#contacts">Контакты</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero fade-in-section" id="hero">
+      <video class="hero-video" autoplay muted loop playsinline poster="images/fallback-image.jpg">
+        <source src="video/videoclip-main.mp4" type="video/mp4">
+      </video>
+      <div class="hero-content">
+        <img src="images/hero-title2.png" class="hero-logo" alt="Tea Bombs Moscow">
+        <p class="hero-subtitle">Натуральные ингредиенты, ручная работа</p>
+        <a href="#catalog" class="btn btn-primary">Смотреть каталог</a>
+      </div>
+    </section>
+
+    <!-- Benefits -->
+    <section class="benefits fade-in-section" id="benefits">
+      <h2 class="section-title font-accent">Почему мы:</h2>
+      <div class="benefits-grid">
+        <article class="benefit-card">
+          <div class="benefit-icon"><img src="images/benefit-icon.png" alt="Натуральность"></div>
+          <h3>Натуральный состав</h3>
+          <p>Только натуральные ингредиенты, чай, ягоды и лепестки цветов без искусственных добавок.</p>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-icon"><img src="images/benefit-icon.png" alt="Ручная работа"></div>
+          <h3>Ручная работа</h3>
+          <p>Каждая бомбочка создаётся вручную с заботой и вниманием к деталям.</p>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-icon"><img src="images/benefit-icon.png" alt="Подарок"></div>
+          <h3>Оригинальный подарок</h3>
+          <p>Красивая упаковка и оригинальная подача — идеальный подарок на любой повод.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Catalog -->
+    <section id="catalog" class="fade-in-section">
+      <h2 class="section-title font-accent">Каталог</h2>
+      <div class="catalog-grid">
+
+        <!-- Товар: Набор 4 шт (Требует выбора чая) -->
+        <article class="product-card" data-id="1" data-type="set" data-count="4" data-price="1200">
+          <div class="product-image">
+            <img src="images/4-bombs.jpg" alt="Набор 4 бомбочки">
+            <span class="product-badge">ХИТ</span>
+          </div>
+          <div class="product-info">
+            <h3 class="product-name font-accent">Набор из 4 чайных бомбочек</h3>
+            <p class="product-composition">Чай на выбор из чайной карты, подарочная упаковка, мини открытка, крафт пакет
+            </p>
+            <p class="product-price">1200 ₽</p>
+            <button type="button" class="btn-buy js-add-to-cart">В корзину</button>
+          </div>
+        </article>
+
+        <!-- Товар: Конфеты (Без выбора чая) -->
+        <article class="product-card" data-id="2" data-type="simple" data-price="25">
+          <div class="product-image"><img src="images/sweets.jpg" alt="Мини конфеты"></div>
+          <div class="product-info">
+            <h3 class="product-name font-accent">Мини конфеты с логотипом</h3>
+            <p class="product-composition">Конфеты из изомальта с вашим логотипом</p>
+            <p class="product-price">25 ₽/шт.</p>
+            <button type="button" class="btn-buy js-add-to-cart">В корзину</button>
+          </div>
+        </article>
+
+        <!-- Товар: Авторский чай (Требует выбора 1 чая) -->
+        <article class="product-card" data-id="3" data-type="loose" data-count="1" data-price="250">
+          <div class="product-image"><img src="images/tea_packet.jpg" alt="Авторский чай"></div>
+          <div class="product-info">
+            <h3 class="product-name font-accent">Авторский чай (50 гр)</h3>
+            <p class="product-composition">Авторский чай из чайной карты в подарочной упаковке, мини открытка</p>
+            <p class="product-price">250 ₽</p>
+            <button type="button" class="btn-buy js-add-to-cart">В корзину</button>
+          </div>
+        </article>
+
+        <!-- Товар: Набор 2 шт -->
+        <article class="product-card" data-id="4" data-type="set" data-count="2" data-price="700">
+          <div class="product-image"><img src="images/2-bombs.jpg" alt="Набор 2 бомбочки"></div>
+          <div class="product-info">
+            <h3 class="product-name font-accent">Набор из 2 чайных бомбочек</h3>
+            <p class="product-composition">Чай на выбор из чайной карты, подарочная упаковка, мини открытка, крафт пакет
+            </p>
+            <p class="product-price">700 ₽</p>
+            <button type="button" class="btn-buy js-add-to-cart">В корзину</button>
+          </div>
+        </article>
+
+        <!-- Товар: Набор 3 шт -->
+        <article class="product-card" data-id="5" data-type="set" data-count="3" data-price="950">
+          <div class="product-image"><img src="images/3-bombs.jpg" alt="Набор 3 бомбочки"></div>
+          <div class="product-info">
+            <h3 class="product-name font-accent">Набор из 3 чайных бомбочек</h3>
+            <p class="product-composition">Чай на выбор из чайной карты, подарочная упаковка, мини открытка, крафт пакет
+            </p>
+            <p class="product-price">950 ₽</p>
+            <button type="button" class="btn-buy js-add-to-cart">В корзину</button>
+          </div>
+        </article>
+
+        <!-- Товар: Набор 6 шт -->
+        <article class="product-card" data-id="6" data-type="set" data-count="6" data-price="1600">
+          <div class="product-image"><img src="images/6-bombs.jpg" alt="Набор 6 бомбочек"></div>
+          <div class="product-info">
+            <h3 class="product-name font-accent">Набор из 6 чайных бомбочек</h3>
+            <p class="product-composition">Чай на выбор из чайной карты, подарочная упаковка, мини открытка, крафт пакет
+            </p>
+            <p class="product-price">1600 ₽</p>
+            <button type="button" class="btn-buy js-add-to-cart">В корзину</button>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="how-section fade-in-section" id="how">
+      <h2 class="section-title font-accent">Как мы работаем</h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <h3>Выбор</h3>
+          <p>Выберите понравившиеся чайные купажи в чайной карте или напишите нам — подберём набор под ваш вкус.</p>
+        </div>
+        <div class="step-card">
+          <h3>Оформление</h3>
+          <p>Оформите заказ через сайт или по телефону. Подтвердим заказ и согласуем детали доставки.</p>
+        </div>
+        <div class="step-card">
+          <h3>Получение</h3>
+          <p>Самовывоз: Московский, Филимонковский район, ТиНАО, Москва. Доставка по Москве по тарифам Я.Доставки -
+            уточняйте при заказе.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tea Menu (Data Source for Selection) -->
+    <section id="tea-menu" class="tea-menu-section fade-in-section">
+      <h2 class="section-title font-accent">Чайная карта</h2>
+      <p class="tea-menu-intro">Выберите основу для ваших чайных бомбочек — авторские купажи, созданные с душой</p>
+      <div class="tea-menu-grid" id="teaMenuGrid">
+        <!-- Tea items generated via JS or kept static with data attributes -->
+        <article class="tea-card" data-tea-name="Имбирный лимон">
+          <div class="tea-info">
+            <span class="tea-badge">ХИТ</span>
+            <h3 class="tea-name">Имбирный лимон</h3>
+            <p class="tea-description">Чай зеленый Сенча, мята, лимонная трава, цедра лимона, шиповник, цедра апельсина,
+              василек, роза лепестки, яблоко резаное</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Зеленый</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Айва с персиком">
+          <div class="tea-info">
+            <h3 class="tea-name">Айва с персиком</h3>
+            <p class="tea-description">Чай черный Ассам, боярышник, лист земляники, айва, персик, цукаты, яблоко</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Черный</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Манговый рай">
+          <div class="tea-info">
+            <h3 class="tea-name">Манговый рай</h3>
+            <p class="tea-description">Чай зеленый, курага, боярышник, мальва, календула</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Зеленый</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Хамелеон">
+          <div class="tea-info">
+            <h3 class="tea-name">Хамелеон</h3>
+            <p class="tea-description">Кусочки сушеного яблока, каркаде, изюм, сублимированная красная и черная
+              смородина, календула лепестки, вишня, шиповник, лист земляники, цукаты</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Красный</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Пина Колада">
+          <div class="tea-info">
+            <h3 class="tea-name">Пина Колада</h3>
+            <p class="tea-description">Каркаде, кокосовая стружка, цукаты, изюм, банановые чипсы, листья земляники,
+              кусочки сушеного яблока, шиповник</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Красный</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Пуэр Лесные ягоды">
+          <div class="tea-info">
+            <span class="tea-badge">ХИТ</span>
+            <h3 class="tea-name">Пуэр Лесные ягоды</h3>
+            <p class="tea-description">Китайский чай Пуэр, малина, ежевика, рябина, смородина</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Черный</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Таежный">
+          <div class="tea-info">
+            <span class="tea-badge">ХИТ</span>
+            <h3 class="tea-name">Таежный</h3>
+            <p class="tea-description">Купаж черного чая, брусничные листья, ягоды ежевики и брусники, лепестки
+              календулы и синего василька, ароматизирован натуральными маслами</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Черный</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Мишки Гамми">
+          <div class="tea-info">
+            <h3 class="tea-name">Мишки Гамми</h3>
+            <p class="tea-description">Чай черный Ассам, кусочки ананаса, ягоды брусники, вишня сушенная, лепестки
+              календулы, ароматизирован натуральными маслами</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Черный</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="1001 Ночь">
+          <div class="tea-info">
+            <h3 class="tea-name">1001 Ночь</h3>
+            <p class="tea-description">Смесь черного Ассама и зеленого Сенча, лепестков роз, календулы, кубиков ананаса,
+              сушенного винограда с ароматом тропических фруктов</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Микс</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Манго Улун">
+          <div class="tea-info">
+            <h3 class="tea-name">Манго Улун</h3>
+            <p class="tea-description">Чай зеленый рассыпной листовой крупный, кусочки ананаса, кусочки манго, лепестки
+              календулы</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Зеленый</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Ганпаудер">
+          <div class="tea-info">
+            <h3 class="tea-name">Ганпаудер</h3>
+            <p class="tea-description">Зеленый чай с выраженным характером и бодрящим эффектом. Свое название он получил
+              благодаря уникальной форме - чайные листья скручены в плотные шарики (пороховые гранулы)</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Зеленый</span></div>
+          </div>
+        </article>
+        <article class="tea-card" data-tea-name="Анчан">
+          <div class="tea-info">
+            <h3 class="tea-name">Анчан</h3>
+            <p class="tea-description">Китайский чай из цветков клитории тройчатой, выращенной в Юго-Восточной Азии.
+              Глубокий синий цвет, мягкий травяной вкус с цветочными нотами, не содержит кофеин</p>
+            <div class="tea-tags"><span class="tea-tag">🌿 Синий</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Reviews -->
+    <section id="reviews" class="fade-in-section">
+      <h2 class="section-title font-accent">Отзывы</h2>
+      <div class="reviews-grid">
+        <article class="review-card">
+          <div class="review-avatar"><img src="https://i.pravatar.cc/150?img=5" alt="Анна"></div>
+          <div class="review-content">
+            <h4>Анна</h4>
+            <p>Заказывала набор в подарок — осталась в восторге и сама! Упаковка красивая, бомбочки пахнут невероятно.
+              Имбирный лимон теперь мой любимый чай.</p>
+          </div>
+        </article>
+        <article class="review-card">
+          <div class="review-avatar"><img src="https://i.pravatar.cc/150?img=1" alt="Дмитрий"></div>
+          <div class="review-content">
+            <h4>Дмитрий</h4>
+            <p>Подарил маме на 8 марта — она в восторге. Натуральный состав и ручная работа чувствуются. Доставка
+              быстрая, всё пришло в целости. Рекомендую!</p>
+          </div>
+        </article>
+        <article class="review-card">
+          <div class="review-avatar"><img
+              src="https://sun9-8.userapi.com/s/v1/ig2/XiI0ljsOJDE2sh-Imn_65LUJJFbOSzJ_H7loITCzml_ddf0dS2-fdIEajDm_ed5CTADnAjkYywf1s31nDu9SczwW.jpg?quality=95&as=32x44,48x66,72x99,108x148,160x219,240x329,360x493,480x658,540x740,640x877,720x987,864x1184&from=bu&cs=864x0"
+              alt="Дмитрий"></div>
+          <div class="review-content">
+            <h4>Юлия</h4>
+            <p>Сестре наборчик брала на подарок.
+              Очень красиво☺ чай ароматный и вкусный, всем понравилось.
+              Оригинально как подарок и красиво упаковано!
+              Буду заказывать ещё, рекомендую!
+              Спасибо вам большое</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section fade-in-section" id="faq">
+      <h2 class="section-title font-accent">Часто задаваемые вопросы</h2>
+      <div class="faq-container">
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>1. Из чего сделаны чайные бомбочки?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>Чайные бомбочки состоят из изомальта — натурального и безопасного сахарозаменителя, а внутри из
+              прессованного чайного листа (основа — зеленый, черный, травяной чай или улун), натуральных лепестков
+              цветов, кусочков ягод и фруктов,
+              а также эфирных масел. В составе нет искусственных ароматизаторов и красителей — только натуральные
+              ингредиенты.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>2. Как заваривать чайные бомбочки?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>Вот простая инструкция по завариванию чайных бомбочек: налейте в заварочный чайник 500-800 мл горячей
+              воды (80-90°C, не кипятка!), положите бомбочку чайник,
+              и наблюдайте, как она "распускается". Через 3-5 минут чай полностью заварится. Можно использовать
+              заварочный чайник
+              или заваривать прямо в кружке — бомбочка 7 см в диаметре.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>3. Сколько чая в одной чайной бомбочке?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>Вес одной чайной бомбочки — 25-30 грамм. Этого достаточно для заваривания 2-3 чашек ароматного чая.
+              Вы можете заварить бомбочку целиком в большом чайнике или разделить её на 2-3 заваривания, если любите
+              менее
+              насыщенный вкус. Бомбочка отлично раскрывается как в маленькой кружке, так и в чайнике объёмом до 1 литра.
+            </p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>4. Как хранить чайные бомбочки?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>Храните бомбочки в сухом, прохладном месте, вдали от прямых солнечных лучей и сильно пахнущих продуктов
+              (специй, кофе). Лучше всего использовать герметичный контейнер или жестяную банку. Срок хранения — до 12
+              месяцев.
+              Каждая бомбочка упакована в индивидуальный пакет, но после вскрытия мы рекомендуем использовать её в
+              течение 2-3 недель.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>5. Можно ли выбрать чай для подарочного набора?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>Да, конечно! При оформлении заказа вы можете выбрать конкретные вкусы для каждой бомбочки в наборе из
+              нашей
+              <a href="#tea-menu">Чайной карты</a>. Если затрудняетесь с выбором, мы составим сбалансированный набор
+              сами или
+              поможем подобрать чаи под ваши предпочтения. Просто укажите пожелания в комментарии к заказу.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Contacts -->
+    <section class="contact-section fade-in-section" id="contacts">
+      <h2 class="section-title font-accent">Оформление заказа</h2>
+      <div class="form-wrapper">
+        <form class="contact-form" id="contactForm" novalidate>
+
+          <!-- Поле Имя -->
+          <div class="form-group" id="name-group">
+            <label for="name">Имя <span class="required">*</span></label>
+            <input type="text" id="name" name="name" placeholder="Как к вам обращаться?" required minlength="2"
+              maxlength="100" pattern="^[A-Za-zА-Яа-яЁё\s-]+$">
+            <div class="validation-message" id="name-error"></div>
+            <!-- <small class="input-hint">Только буквы, пробел и дефис (от 2 до 100 символов)</small> -->
+          </div>
+
+          <!-- Поле Телефон -->
+          <div class="form-group" id="phone-group">
+            <label for="phone">Телефон <span class="required">*</span></label>
+            <input type="tel" id="phone" name="phone" placeholder="+7 (___) ___-__-__" required>
+            <div class="validation-message" id="phone-error"></div>
+            <!-- <small class="input-hint">В формате +7 (999) 123-45-67</small> -->
+          </div>
+
+          <!-- Поле Email -->
+          <div class="form-group" id="email-group">
+            <label for="email">Email <span class="optional">(необязательно)</span></label>
+            <input type="email" id="email" name="email" placeholder="your@email.ru">
+            <div class="validation-message" id="email-error"></div>
+            <!-- <small class="input-hint">Например: name@domain.ru</small> -->
+          </div>
+
+          <!-- Поле Комментарий -->
+          <div class="form-group" id="comment-group">
+            <label for="comment">Комментарий к заказу <span class="optional">(необязательно)</span></label>
+            <textarea id="comment" name="comment" rows="3" placeholder="Адрес доставки, пожелания по чаю..."
+              maxlength="300"></textarea>
+            <div class="validation-message" id="comment-error"></div>
+            <div class="char-counter"><span id="comment-count">0</span>/300 символов</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="submit-btn">Отправить заказ</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p class="footer-logo font-accent">Tea Bombs•Moscow•</p>
+      <div class="footer-contacts">
+        <p>Москва</p>
+        <p><a href="tel:+79991234567">+7 (988) 562-37-01</a></p>
+        <!-- <p><a href="mailto:hello@teabombs.ru">hello@teabombs.ru</a></p> -->
+      </div>
+      <div class="social-links">
+        <a href="https://t.me/tea_bombsMoscow" target="_blank" aria-label="Telegram">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
+          </svg>
+        </a>
+        <a href="https://vk.com/tea_bombs_moskovskiy" target="_blank" aria-label="VK">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M15.684 0H8.316C1.592 0 0 1.592 0 8.316v7.368C0 22.408 1.592 24 8.316 24h7.368C22.408 24 24 22.408 24 15.684V8.316C24 1.592 22.408 0 15.684 0zm3.692 17.148h-1.844c-.66 0-.864-.468-2.052-1.656-1.032-1.032-1.488-1.164-1.74-1.164-.36 0-.456.096-.456.6v1.512c0 .432-.132.684-1.272.684-1.872 0-3.948-1.152-5.424-3.3-2.232-3.072-2.844-5.376-2.844-5.856 0-.252.096-.48.6-.48h1.848c.456 0 .624.204.804.684.876 2.556 2.352 4.8 2.952 4.8.228 0 .336-.108.336-.708v-2.748c0-2.412-1.464-2.628-1.464-3.504 0-.432.336-.78.9-.78h2.868c.456 0 .624.204.624.684v3.708c0 .456.204.624.348.624.3 0 .552-.168 1.104-.72 1.152-1.296 1.968-3.288 1.968-3.288.108-.252.312-.48.768-.48h1.848c.552 0 .684.276.552.684-.24.84-2.556 4.896-2.556 4.896-.204.372-.096.54 0 .852.156.372.672 1.104 1.008 1.572.624.852 1.104 1.56 1.104 2.064.012.792-.444 1.164-1.2 1.164z" />
+          </svg>
+        </a>
+        <a href="#" aria-label="MAX" target="_blank" aria-label="MAX">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12.5 21.5c-1.8 0-2.7-0.3-4.2-1.3-0.9 1.2-3.9 2.1-4 0.5 0-1.2-0.3-2.2-0.6-3.3-0.4-1.4-0.8-2.9-0.8-5.1 0-5.3 4.4-9.3 9.6-9.3 5.2 0 9.3 4.2 9.3 9.4 0 5.1-4.1 9.3-9.3 9.3m0.1-14.1c-2.5-0.1-4.5 1.6-4.9 4.4-0.4 2.3 0.3 5 0.8 5.2 0.3 0.1 0.9-0.5 1.3-0.9 0.8 0.5 1.7 0.8 2.3 0.8 2.6 0.1 4.9-1.9 5-4.5 0.1-2.6-1.9-4.8-4.5-5z" />
+          </svg>
+        </a>
+      </div>
+      <p class="footer-copy">© Tea•Bombs•Moscow•, 2024</p>
+    </div>
+  </footer>
+
+  <!-- MODALS -->
+
+  <!-- 1. Quantity Modal -->
+  <div id="quantityModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h3 class="modal-title font-accent">Количество</h3>
+      <p class="modal-subtitle" id="quantityProductName"></p>
+
+      <div class="quantity-selector">
+        <button type="button" class="qty-btn" id="qtyDecrease">−</button>
+        <input type="number" id="qtyInput" value="1" min="1" max="99">
+        <button type="button" class="qty-btn" id="qtyIncrease">+</button>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="confirmQuantity">Продолжить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Tea Selection Modal -->
+  <div id="teaSelectModal" class="modal">
+    <div class="modal-content modal-lg">
+      <span class="close-modal">&times;</span>
+      <h3 class="modal-title font-accent">Выберите вкусы чая</h3>
+      <p class="modal-subtitle">Заполните слоты для бомбочек</p>
+
+      <div id="teaSlotsContainer" class="tea-slots-grid">
+        <!-- Slots generated by JS -->
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="confirmTeaSelection">Добавить в корзину</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Cart Modal -->
+  <div id="cartModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h3 class="modal-title font-accent">Ваша корзина</h3>
+      <div id="cartItemsContainer" class="cart-items">
+        <!-- Items generated by JS -->
+        <p class="empty-cart-msg">Корзина пуста</p>
+      </div>
+      <div class="cart-total">
+        <span>Итого:</span>
+        <span id="cartTotalPrice">0 ₽</span>
+      </div>
+      <button class="btn btn-primary" id="checkoutBtn">Оформить заказ</button>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+</body>
+
+</html>
