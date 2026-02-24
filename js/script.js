@@ -1,8 +1,10 @@
 (function () {
   'use strict';
 
-  // --- CONFIGURATION ---
-  const BITRIX24_WEBHOOK_URL = 'https://b24-wxz6it.bitrix24.ru/rest/1/tg561scqxeenujv2/'; // Уже в PHP, но оставим
+  // --- TELEGRAM CONFIGURATION ---
+  // ПОЛУЧИТЕ СВОИ ДАННЫЕ У @BotFather И @userinfobot
+  const TELEGRAM_TOKEN = 'ВАШ_ТОКЕН_БОТА'; // Замените на свой токен
+  const TELEGRAM_CHAT_ID = 'ВАШ_CHAT_ID'; // Замените на свой ID
 
   // --- TEA FLAVORS DATA ---
   const teaFlavors = [
@@ -55,6 +57,45 @@
   const submitBtn = document.getElementById('submit-btn');
   const commentCount = document.getElementById('comment-count');
   const charCounter = document.querySelector('.char-counter');
+
+  // --- Функция отправки в Telegram ---
+  async function sendToTelegram(orderData) {
+    const message = `
+🆕 *НОВЫЙ ЗАКАЗ С САЙТА*
+    
+👤 *Клиент:* ${orderData.name}
+📞 *Телефон:* ${orderData.phone}
+📧 *Email:* ${orderData.email || 'не указан'}
+💬 *Комментарий:* ${orderData.comment || 'нет'}
+
+🛒 *Состав заказа:*
+${orderData.items.map(item => {
+  let text = `• ${item.name} x${item.quantity} — ${item.price * item.quantity}₽`;
+  if (item.teaSelection && item.teaSelection.length) {
+    text += `\n  Чаи: ${item.teaSelection.join(', ')}`;
+  }
+  return text;
+}).join('\n')}
+
+💰 *ИТОГО: ${orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0)}₽*
+
+📅 ${new Date().toLocaleString('ru-RU')}
+    `;
+
+    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown'
+      })
+    });
+    
+    return response.json();
+  }
 
   // --- LOAD CART FROM STORAGE ---
   function loadCart() {
@@ -484,19 +525,17 @@
         input.classList.add('valid');
         input.classList.remove('invalid');
         errorEl.textContent = '';
-        errorEl.classList.remove('visible'); // Скрываем сообщение
+        errorEl.classList.remove('visible');
       } else {
         input.classList.add('invalid');
         input.classList.remove('valid');
         errorEl.textContent = result.message;
-        errorEl.classList.add('visible'); // Показываем сообщение
+        errorEl.classList.add('visible');
 
-        // Добавляем эффект встряски для поля с ошибкой
         input.style.animation = 'none';
-        input.offsetHeight; // Trigger reflow
+        input.offsetHeight;
         input.style.animation = 'shake 0.3s ease-in-out';
 
-        // Убираем анимацию после завершения
         setTimeout(() => {
           input.style.animation = '';
         }, 300);
@@ -517,7 +556,6 @@
     function updateSubmitButton() {
       submitBtn.disabled = !isFormValid();
       
-      // Если поле пустое и не было взаимодействия, убираем классы валидации
       if (nameInput.value === '') {
         nameInput.classList.remove('valid', 'invalid');
       }
@@ -532,13 +570,10 @@
       }
     }
 
-    // Первоначальная проверка
     updateSubmitButton();
 
-    // Удаляем старый обработчик, если он есть
     contactForm.removeEventListener('submit', contactForm._submitHandler);
 
-    // Создаем новый обработчик
     const submitHandler = async (e) => {
       e.preventDefault();
 
@@ -556,61 +591,46 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'Отправка...';
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const utms = {
-        utm_source: urlParams.get('utm_source'),
-        utm_medium: urlParams.get('utm_medium'),
-        utm_campaign: urlParams.get('utm_campaign'),
-        utm_content: urlParams.get('utm_content'),
-        utm_term: urlParams.get('utm_term')
-      };
-
       try {
+        // Собираем данные для Telegram
         const orderData = {
           name: name,
-          last_name: '',
           phone: phone,
           email: email,
           comment: comment,
-          utms: utms,
           items: cart.map(item => ({
-            id: item.id,
             name: item.name,
             price: item.price,
             quantity: item.quantity,
             teaSelection: item.teaSelection || []
           }))
         };
-
-        const response = await fetch('api/send-to-bitrix24.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orderData)
-        });
-
-        const result = await response.json();
-
-        // В обработчике формы, после успешной отправки, добавьте:
-        if (result.success) {
+        
+        // Отправляем в Telegram
+        const result = await sendToTelegram(orderData);
+        
+        if (result.ok) {
           alert('✅ Спасибо! Ваш заказ принят. Мы скоро свяжемся с вами.');
 
+          // Очищаем корзину
           cart = [];
           saveCart();
           updateCartUI();
 
+          // Очищаем форму
           contactForm.reset();
           if (commentCount) commentCount.textContent = '0';
           if (charCounter) charCounter.classList.remove('warning', 'danger');
 
-          // Сбрасываем классы валидации и скрываем сообщения об ошибках
+          // Сбрасываем классы валидации
           [nameInput, phoneInput, emailInput, commentInput].forEach(input => {
             if (input) {
               input.classList.remove('valid', 'invalid');
-              input.style.animation = ''; // Убираем анимацию
+              input.style.animation = '';
             }
           });
 
-          // Скрываем все сообщения об ошибках
+          // Скрываем сообщения об ошибках
           ['name-error', 'phone-error', 'email-error', 'comment-error'].forEach(id => {
             const errorEl = document.getElementById(id);
             if (errorEl) {
@@ -619,9 +639,10 @@
             }
           });
 
+          // Закрываем модалку корзины
           if (cartModal) closeModal(cartModal);
         } else {
-          alert('❌ Ошибка: ' + result.message);
+          throw new Error('Ошибка отправки в Telegram');
         }
       } catch (error) {
         console.error('Ошибка:', error);
@@ -633,7 +654,6 @@
       }
     };
 
-    // Сохраняем обработчик и добавляем его
     contactForm._submitHandler = submitHandler;
     contactForm.addEventListener('submit', submitHandler);
   }
@@ -649,7 +669,6 @@
       question.addEventListener('click', () => {
         const isActive = item.classList.contains('active');
 
-        // Закрываем все остальные (раскомментируй если нужно)
         // faqItems.forEach(otherItem => {
         //   otherItem.classList.remove('active');
         // });
@@ -675,13 +694,8 @@
   });
 
   document.addEventListener('DOMContentLoaded', () => {
-    // Запускаем анимации
     document.querySelectorAll('.fade-in-section').forEach(section => observer.observe(section));
-
-    // Инициализируем FAQ
     initFaqAccordion();
-
-    // Инициализируем валидацию формы
     setupFormValidation();
   });
 
