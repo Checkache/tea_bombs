@@ -1,10 +1,9 @@
 (function () {
   'use strict';
 
-  // --- TELEGRAM CONFIGURATION ---
-  // ПОЛУЧИТЕ СВОИ ДАННЫЕ У @BotFather И @userinfobot
-  const TELEGRAM_TOKEN = 'ВАШ_ТОКЕН_БОТА'; // Замените на свой токен
-  const TELEGRAM_CHAT_ID = 'ВАШ_CHAT_ID'; // Замените на свой ID
+  const TELEGRAM_TOKEN = 'ВАШ_ТОКЕН_БОТА'; // От @BotFather
+  const TELEGRAM_CHAT_ID = 'ВАШ_CHAT_ID';  // От @userinfobot
+  const GOOGLE_SHEETS_URL = 'ВАШ_URL_GOOGLE_APPS_SCRIPT'; // Из предыдущего шага
 
   // --- TEA FLAVORS DATA ---
   const teaFlavors = [
@@ -60,8 +59,9 @@
 
   // --- Функция отправки в Telegram ---
   async function sendToTelegram(orderData) {
-    const message = `
-🆕 *НОВЫЙ ЗАКАЗ С САЙТА*
+    // Убираем лишние пробелы в начале строк для лучшего форматирования
+    const message = 
+`🆕 *НОВЫЙ ЗАКАЗ С САЙТА*
     
 👤 *Клиент:* ${orderData.name}
 📞 *Телефон:* ${orderData.phone}
@@ -79,8 +79,7 @@ ${orderData.items.map(item => {
 
 💰 *ИТОГО: ${orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0)}₽*
 
-📅 ${new Date().toLocaleString('ru-RU')}
-    `;
+📅 ${new Date().toLocaleString('ru-RU')}`;
 
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     
@@ -95,6 +94,45 @@ ${orderData.items.map(item => {
     });
     
     return response.json();
+  }
+
+  // --- Функция отправки в Google Sheets ---
+  async function sendToGoogleSheets(orderData) {
+    // Для Google Sheets нам нужно подготовить данные в формате, который ожидает скрипт
+    const sheetsData = {
+      name: orderData.name,
+      phone: orderData.phone,
+      email: orderData.email || '',
+      comment: orderData.comment || '',
+      items: orderData.items.map(item => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        teaSelection: item.teaSelection || []
+      }))
+    };
+
+    const response = await fetch(GOOGLE_SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors', // Важно для GitHub Pages!
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sheetsData)
+    });
+    
+    // При mode: 'no-cors' мы не можем прочитать response
+    // Просто возвращаем успех, если не было ошибки сети
+    return { success: true };
+  }
+
+  // --- Функция форматирования товаров для Google Sheets (если нужно) ---
+  function formatItemsForSheets(items) {
+    return items.map(item => {
+      let text = `${item.name} x${item.quantity} — ${item.price * item.quantity}₽`;
+      if (item.teaSelection && item.teaSelection.length) {
+        text += ` (${item.teaSelection.join(', ')})`;
+      }
+      return text;
+    }).join('; ');
   }
 
   // --- LOAD CART FROM STORAGE ---
@@ -576,23 +614,24 @@ ${orderData.items.map(item => {
 
     const submitHandler = async (e) => {
       e.preventDefault();
-
+    
+      // Валидация (используем существующие функции)
       if (!isFormValid()) {
         alert('Пожалуйста, исправьте ошибки в форме');
         return;
       }
-
+    
       const name = nameInput.value.trim();
       const phone = phoneInput.value.trim();
       const email = emailInput ? emailInput.value.trim() : '';
       const comment = commentInput ? commentInput.value.trim() : '';
-
+    
       const originalText = submitBtn.textContent;
       submitBtn.disabled = true;
       submitBtn.textContent = 'Отправка...';
-
+    
       try {
-        // Собираем данные для Telegram
+        // 1. Подготавливаем данные заказа
         const orderData = {
           name: name,
           phone: phone,
@@ -605,23 +644,55 @@ ${orderData.items.map(item => {
             teaSelection: item.teaSelection || []
           }))
         };
+    
+        // 2. ЗАПУСКАЕМ ПАРАЛЛЕЛЬНУЮ ОТПРАВКУ
+        console.log('📤 Отправка заказа в Telegram и Google Sheets...');
         
-        // Отправляем в Telegram
-        const result = await sendToTelegram(orderData);
-        
-        if (result.ok) {
-          alert('✅ Спасибо! Ваш заказ принят. Мы скоро свяжемся с вами.');
-
-          // Очищаем корзину
+        // Запускаем оба запроса одновременно
+        const [telegramResult, sheetsResult] = await Promise.allSettled([
+          sendToTelegram(orderData),
+          sendToGoogleSheets(orderData)
+        ]);
+    
+        // 3. АНАЛИЗИРУЕМ РЕЗУЛЬТАТЫ
+        const results = {
+          telegram: telegramResult.status === 'fulfilled' 
+            ? { success: telegramResult.value?.ok, data: telegramResult.value }
+            : { success: false, error: telegramResult.reason },
+          sheets: sheetsResult.status === 'fulfilled'
+            ? { success: true, data: sheetsResult.value }
+            : { success: false, error: sheetsResult.reason }
+        };
+    
+        // Логируем для отладки
+        console.log('📊 Результаты отправки:', results);
+    
+        // 4. ПРОВЕРЯЕМ, ХОТЯ БЫ ОДИН КАНАЛ СРАБОТАЛ
+        if (results.telegram.success || results.sheets.success) {
+          // Успех - хотя бы один канал доставил данные
+          let successMessage = '✅ Спасибо! Ваш заказ принят.';
+          
+          if (!results.telegram.success) {
+            console.warn('⚠️ Telegram не ответил, но данные сохранены в Google Sheets');
+            successMessage = '✅ Спасибо! Заказ принят (уведомление в Telegram может прийти с задержкой).';
+          }
+          
+          if (!results.sheets.success) {
+            console.warn('⚠️ Google Sheets не ответил, но уведомление в Telegram отправлено');
+            // В этом случае данные хотя бы в Telegram есть
+          }
+          
+          alert(successMessage);
+    
+          // 5. ОЧИЩАЕМ КОРЗИНУ И ФОРМУ
           cart = [];
           saveCart();
           updateCartUI();
-
-          // Очищаем форму
+    
           contactForm.reset();
           if (commentCount) commentCount.textContent = '0';
           if (charCounter) charCounter.classList.remove('warning', 'danger');
-
+    
           // Сбрасываем классы валидации
           [nameInput, phoneInput, emailInput, commentInput].forEach(input => {
             if (input) {
@@ -629,7 +700,7 @@ ${orderData.items.map(item => {
               input.style.animation = '';
             }
           });
-
+    
           // Скрываем сообщения об ошибках
           ['name-error', 'phone-error', 'email-error', 'comment-error'].forEach(id => {
             const errorEl = document.getElementById(id);
@@ -638,22 +709,31 @@ ${orderData.items.map(item => {
               errorEl.classList.remove('visible');
             }
           });
-
+    
           // Закрываем модалку корзины
           if (cartModal) closeModal(cartModal);
+          
         } else {
-          throw new Error('Ошибка отправки в Telegram');
+          // Оба канала не сработали
+          throw new Error('Не удалось отправить заказ ни в один канал');
         }
+        
       } catch (error) {
-        console.error('Ошибка:', error);
-        alert('❌ Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
+        console.error('❌ Критическая ошибка:', error);
+        alert('❌ Произошла ошибка при отправке. Пожалуйста, попробуйте позже или свяжитесь с нами по телефону.');
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
         updateSubmitButton();
       }
     };
-
+    
+    // Удаляем старый обработчик, если он был сохранен
+    if (contactForm._submitHandler) {
+      contactForm.removeEventListener('submit', contactForm._submitHandler);
+    }
+    
+    // Сохраняем и добавляем новый
     contactForm._submitHandler = submitHandler;
     contactForm.addEventListener('submit', submitHandler);
   }
