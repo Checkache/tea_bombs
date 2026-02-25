@@ -153,38 +153,47 @@ ${orderData.items.map(item => {
     logToScreen('📤 Начинаем отправку в Google Sheets...');
     
     try {
-      // Форматируем данные для Google Sheets
-      const itemsText = orderData.items.map(item => {
-        let text = `${item.name} x${item.quantity} — ${item.price * item.quantity}₽`;
-        if (item.teaSelection && item.teaSelection.length) {
-          text += ` (${item.teaSelection.join(', ')})`;
-        }
-        return text;
-      }).join('; ');
-
-      const total = orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
+      // Apps Script ожидает массив items (name, price, quantity, teaSelection), не строку
       const sheetsData = {
         name: orderData.name,
         phone: orderData.phone,
         email: orderData.email || '',
-        items: itemsText,
-        total: total,
-        timestamp: new Date().toISOString()
+        items: orderData.items.map(item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          teaSelection: item.teaSelection || []
+        }))
       };
 
       logToScreen(`Данные для Google Sheets: ${JSON.stringify(sheetsData)}`);
       logToScreen(`URL Google Sheets: ${GOOGLE_SHEETS_URL}`);
 
+      // Content-Type: text/plain — «простой» запрос без CORS preflight (OPTIONS).
+      // Без no-cors можно прочитать ответ и убедиться, что строка добавлена.
       const response = await fetch(GOOGLE_SHEETS_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(sheetsData)
       });
       
-      logToScreen('✅ Запрос в Google Sheets отправлен (mode: no-cors)');
-      return { success: true };
+      const responseText = await response.text();
+      logToScreen(`Ответ Google Sheets (${response.status}): ${responseText}`);
+      
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (_) {
+        result = { success: false, error: responseText || 'Неверный ответ сервера' };
+      }
+      
+      if (result.success) {
+        logToScreen('✅ Заказ добавлен в таблицу');
+      } else {
+        logToScreen(`❌ Google Sheets: ${result.error || result.message}`, 'error');
+      }
+      
+      return { success: !!result.success, error: result.error };
       
     } catch (error) {
       logToScreen(`❌ Ошибка Google Sheets: ${error.message}`, 'error');
@@ -698,7 +707,7 @@ ${orderData.items.map(item => {
             ? { success: telegramResult.value?.ok === true, data: telegramResult.value }
             : { success: false, error: telegramResult.reason?.message },
           sheets: sheetsResult.status === 'fulfilled'
-            ? { success: true }
+            ? { success: sheetsResult.value?.success === true, error: sheetsResult.value?.error }
             : { success: false, error: sheetsResult.reason?.message }
         };
     
