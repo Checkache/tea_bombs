@@ -1,8 +1,9 @@
 (function () {
   'use strict';
 
+  // --- КОНФИГУРАЦИЯ - ЗАМЕНИТЕ НА СВОИ ЗНАЧЕНИЯ ---
   const TELEGRAM_TOKEN = '8728324632:AAGmFAmQEXR2g28nrxXsDFugLUMp0ilbZIw'; // От @BotFather
-  const TELEGRAM_CHAT_ID = '276229119';  // От @userinfobot
+  const TELEGRAM_CHAT_ID = '8728324632';  // От @userinfobot - ЭТО ДОЛЖЕН БЫТЬ ВАШ ID (число), а НЕ токен!
   const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwXKy9ut77nQpWy8GDa5YcpUuKxrTo9tamNEo1BqgvpjvuRoyHMx61RXOJLG3OVxXZH/exec'; // Из предыдущего шага
 
   // --- TEA FLAVORS DATA ---
@@ -59,8 +60,8 @@
 
   // --- Функция отправки в Telegram ---
   async function sendToTelegram(orderData) {
-    // Убираем лишние пробелы в начале строк для лучшего форматирования
-    const message = 
+    try {
+      const message = 
 `🆕 *НОВЫЙ ЗАКАЗ С САЙТА*
     
 👤 *Клиент:* ${orderData.name}
@@ -81,58 +82,68 @@ ${orderData.items.map(item => {
 
 📅 ${new Date().toLocaleString('ru-RU')}`;
 
-    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        text: message,
-        parse_mode: 'Markdown'
-      })
-    });
-    
-    return response.json();
+      const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: message,
+          parse_mode: 'Markdown'
+        })
+      });
+      
+      const result = await response.json();
+      console.log('📨 Ответ Telegram:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Ошибка Telegram:', error);
+      return { ok: false, error: error.message };
+    }
   }
 
   // --- Функция отправки в Google Sheets ---
   async function sendToGoogleSheets(orderData) {
-    // Для Google Sheets нам нужно подготовить данные в формате, который ожидает скрипт
-    const sheetsData = {
-      name: orderData.name,
-      phone: orderData.phone,
-      email: orderData.email || '',
-      comment: orderData.comment || '',
-      items: orderData.items.map(item => ({
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        teaSelection: item.teaSelection || []
-      }))
-    };
+    try {
+      // Форматируем товары для Google Sheets
+      const itemsText = orderData.items.map(item => {
+        let text = `${item.name} x${item.quantity} — ${item.price * item.quantity}₽`;
+        if (item.teaSelection && item.teaSelection.length) {
+          text += ` (${item.teaSelection.join(', ')})`;
+        }
+        return text;
+      }).join('; ');
 
-    const response = await fetch(GOOGLE_SHEETS_URL, {
-      method: 'POST',
-      mode: 'no-cors', // Важно для GitHub Pages!
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(sheetsData)
-    });
-    
-    // При mode: 'no-cors' мы не можем прочитать response
-    // Просто возвращаем успех, если не было ошибки сети
-    return { success: true };
-  }
+      // Считаем итог
+      const total = orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // --- Функция форматирования товаров для Google Sheets (если нужно) ---
-  function formatItemsForSheets(items) {
-    return items.map(item => {
-      let text = `${item.name} x${item.quantity} — ${item.price * item.quantity}₽`;
-      if (item.teaSelection && item.teaSelection.length) {
-        text += ` (${item.teaSelection.join(', ')})`;
-      }
-      return text;
-    }).join('; ');
+      // Для Google Apps Script нужно отправить данные в формате, который ожидает скрипт
+      const sheetsData = {
+        name: orderData.name,
+        phone: orderData.phone,
+        email: orderData.email || '',
+        items: itemsText,
+        total: total,
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('📤 Отправка в Google Sheets:', sheetsData);
+
+      const response = await fetch(GOOGLE_SHEETS_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Важно для GitHub Pages!
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sheetsData)
+      });
+      
+      // При mode: 'no-cors' мы не можем прочитать response
+      // Просто считаем, что успех
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Ошибка Google Sheets:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   // --- LOAD CART FROM STORAGE ---
@@ -516,7 +527,28 @@ ${orderData.items.map(item => {
 
   // --- SETUP FORM VALIDATION ---
   function setupFormValidation() {
-    if (!contactForm || !nameInput || !phoneInput || !submitBtn) return;
+    if (!contactForm || !nameInput || !phoneInput || !submitBtn) {
+      console.warn('⚠️ Элементы формы не найдены');
+      return;
+    }
+
+    // Создаем элементы для ошибок, если их нет в HTML
+    function ensureErrorElement(inputId, errorId) {
+      if (!document.getElementById(errorId)) {
+        const input = document.getElementById(inputId);
+        if (input) {
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'validation-message';
+          errorDiv.id = errorId;
+          input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        }
+      }
+    }
+
+    ensureErrorElement('name', 'name-error');
+    ensureErrorElement('phone', 'phone-error');
+    ensureErrorElement('email', 'email-error');
+    ensureErrorElement('comment', 'comment-error');
 
     // Устанавливаем маску для телефона
     phoneInput.addEventListener('input', function () {
@@ -615,9 +647,13 @@ ${orderData.items.map(item => {
     const submitHandler = async (e) => {
       e.preventDefault();
     
-      // Валидация (используем существующие функции)
       if (!isFormValid()) {
         alert('Пожалуйста, исправьте ошибки в форме');
+        return;
+      }
+
+      if (cart.length === 0) {
+        alert('Корзина пуста. Добавьте товары перед заказом.');
         return;
       }
     
@@ -631,7 +667,6 @@ ${orderData.items.map(item => {
       submitBtn.textContent = 'Отправка...';
     
       try {
-        // 1. Подготавливаем данные заказа
         const orderData = {
           name: name,
           phone: phone,
@@ -645,46 +680,39 @@ ${orderData.items.map(item => {
           }))
         };
     
-        // 2. ЗАПУСКАЕМ ПАРАЛЛЕЛЬНУЮ ОТПРАВКУ
         console.log('📤 Отправка заказа в Telegram и Google Sheets...');
+        console.log('Данные заказа:', orderData);
         
-        // Запускаем оба запроса одновременно
         const [telegramResult, sheetsResult] = await Promise.allSettled([
           sendToTelegram(orderData),
           sendToGoogleSheets(orderData)
         ]);
     
-        // 3. АНАЛИЗИРУЕМ РЕЗУЛЬТАТЫ
         const results = {
           telegram: telegramResult.status === 'fulfilled' 
-            ? { success: telegramResult.value?.ok, data: telegramResult.value }
-            : { success: false, error: telegramResult.reason },
+            ? { success: telegramResult.value?.ok === true, data: telegramResult.value }
+            : { success: false, error: telegramResult.reason?.message },
           sheets: sheetsResult.status === 'fulfilled'
-            ? { success: true, data: sheetsResult.value }
-            : { success: false, error: sheetsResult.reason }
+            ? { success: true }
+            : { success: false, error: sheetsResult.reason?.message }
         };
     
-        // Логируем для отладки
         console.log('📊 Результаты отправки:', results);
     
-        // 4. ПРОВЕРЯЕМ, ХОТЯ БЫ ОДИН КАНАЛ СРАБОТАЛ
         if (results.telegram.success || results.sheets.success) {
-          // Успех - хотя бы один канал доставил данные
           let successMessage = '✅ Спасибо! Ваш заказ принят.';
           
           if (!results.telegram.success) {
             console.warn('⚠️ Telegram не ответил, но данные сохранены в Google Sheets');
-            successMessage = '✅ Спасибо! Заказ принят (уведомление в Telegram может прийти с задержкой).';
+            successMessage = '✅ Спасибо! Ваш заказ принят.';
           }
           
           if (!results.sheets.success) {
             console.warn('⚠️ Google Sheets не ответил, но уведомление в Telegram отправлено');
-            // В этом случае данные хотя бы в Telegram есть
           }
           
           alert(successMessage);
     
-          // 5. ОЧИЩАЕМ КОРЗИНУ И ФОРМУ
           cart = [];
           saveCart();
           updateCartUI();
@@ -693,7 +721,6 @@ ${orderData.items.map(item => {
           if (commentCount) commentCount.textContent = '0';
           if (charCounter) charCounter.classList.remove('warning', 'danger');
     
-          // Сбрасываем классы валидации
           [nameInput, phoneInput, emailInput, commentInput].forEach(input => {
             if (input) {
               input.classList.remove('valid', 'invalid');
@@ -701,7 +728,6 @@ ${orderData.items.map(item => {
             }
           });
     
-          // Скрываем сообщения об ошибках
           ['name-error', 'phone-error', 'email-error', 'comment-error'].forEach(id => {
             const errorEl = document.getElementById(id);
             if (errorEl) {
@@ -710,12 +736,11 @@ ${orderData.items.map(item => {
             }
           });
     
-          // Закрываем модалку корзины
           if (cartModal) closeModal(cartModal);
           
         } else {
-          // Оба канала не сработали
-          throw new Error('Не удалось отправить заказ ни в один канал');
+          console.error('❌ Оба канала не сработали:', results);
+          alert('❌ Произошла ошибка при отправке. Пожалуйста, попробуйте позже или свяжитесь с нами по телефону.');
         }
         
       } catch (error) {
@@ -728,12 +753,10 @@ ${orderData.items.map(item => {
       }
     };
     
-    // Удаляем старый обработчик, если он был сохранен
     if (contactForm._submitHandler) {
       contactForm.removeEventListener('submit', contactForm._submitHandler);
     }
     
-    // Сохраняем и добавляем новый
     contactForm._submitHandler = submitHandler;
     contactForm.addEventListener('submit', submitHandler);
   }
@@ -748,10 +771,6 @@ ${orderData.items.map(item => {
 
       question.addEventListener('click', () => {
         const isActive = item.classList.contains('active');
-
-        // faqItems.forEach(otherItem => {
-        //   otherItem.classList.remove('active');
-        // });
 
         if (!isActive) {
           item.classList.add('active');
