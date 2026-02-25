@@ -1,25 +1,62 @@
 (function () {
   'use strict';
 
-  // --- КОНФИГУРАЦИЯ - ЗАМЕНИТЕ НА СВОИ ЗНАЧЕНИЯ ---
-  const TELEGRAM_TOKEN = '8728324632:AAGmFAmQEXR2g28nrxXsDFugLUMp0ilbZIw'; // От @BotFather
-  const TELEGRAM_CHAT_ID = '8728324632';  // От @userinfobot - ЭТО ДОЛЖЕН БЫТЬ ВАШ ID (число), а НЕ токен!
-  const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwXKy9ut77nQpWy8GDa5YcpUuKxrTo9tamNEo1BqgvpjvuRoyHMx61RXOJLG3OVxXZH/exec'; // Из предыдущего шага
+  // --- КОНФИГУРАЦИЯ ---
+  const TELEGRAM_TOKEN = '8728324632:AAGmFAmQEXR2g28nrxXsDFugLUMp0ilbZIw';
+  const TELEGRAM_CHAT_ID = '8728324632'; // Убедитесь, что это правильный CHAT ID, а не токен!
+  const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwXKy9ut77nQpWy8GDa5YcpUuKxrTo9tamNEo1BqgvpjvuRoyHMx61RXOJLG3OVxXZH/exec';
+
+  // Для отладки - создадим панель с логами
+  function addDebugPanel() {
+    if (document.getElementById('debug-panel')) return;
+    
+    const panel = document.createElement('div');
+    panel.id = 'debug-panel';
+    panel.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.8);
+      color: #0f0;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 9999;
+      display: none;
+    `;
+    panel.innerHTML = '<h4 style="margin:0 0 10px;color:#fff;">🔍 Лог отправки</h4><div id="debug-log"></div>';
+    document.body.appendChild(panel);
+  }
+  
+  function logToScreen(msg, type = 'info') {
+    const logDiv = document.getElementById('debug-log');
+    if (!logDiv) return;
+    
+    const colors = { info: '#0f0', error: '#f00', warning: '#ff0' };
+    const entry = document.createElement('div');
+    entry.style.cssText = `color: ${colors[type]}; margin: 2px 0; border-bottom: 1px solid #333; padding: 2px;`;
+    entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    logDiv.appendChild(entry);
+    logDiv.scrollTop = logDiv.scrollHeight;
+    
+    // Также пишем в консоль
+    console.log(`[${type.toUpperCase()}] ${msg}`);
+  }
+
+  function showDebugPanel() {
+    const panel = document.getElementById('debug-panel');
+    if (panel) panel.style.display = 'block';
+  }
 
   // --- TEA FLAVORS DATA ---
   const teaFlavors = [
-    'Имбирный лимон',
-    'Айва с персиком',
-    'Манговый рай',
-    'Хамелеон',
-    'Пина Колада',
-    'Пуэр Лесные ягоды',
-    'Таежный',
-    'Мишки Гамми',
-    '1001 Ночь',
-    'Манго Улун',
-    'Ганпаудер',
-    'Анчан'
+    'Имбирный лимон', 'Айва с персиком', 'Манговый рай', 'Хамелеон',
+    'Пина Колада', 'Пуэр Лесные ягоды', 'Таежный', 'Мишки Гамми',
+    '1001 Ночь', 'Манго Улун', 'Ганпаудер', 'Анчан'
   ];
 
   // --- STATE ---
@@ -60,6 +97,8 @@
 
   // --- Функция отправки в Telegram ---
   async function sendToTelegram(orderData) {
+    logToScreen('📤 Начинаем отправку в Telegram...');
+    
     try {
       const message = 
 `🆕 *НОВЫЙ ЗАКАЗ С САЙТА*
@@ -82,6 +121,9 @@ ${orderData.items.map(item => {
 
 📅 ${new Date().toLocaleString('ru-RU')}`;
 
+      logToScreen(`Telegram URL: https://api.telegram.org/bot${TELEGRAM_TOKEN.substring(0,10)}.../sendMessage`);
+      logToScreen(`Chat ID: ${TELEGRAM_CHAT_ID}`);
+
       const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
       
       const response = await fetch(url, {
@@ -94,19 +136,24 @@ ${orderData.items.map(item => {
         })
       });
       
+      logToScreen(`Статус ответа Telegram: ${response.status}`);
+      
       const result = await response.json();
-      console.log('📨 Ответ Telegram:', result);
+      logToScreen(`Ответ Telegram: ${JSON.stringify(result)}`);
+      
       return result;
     } catch (error) {
-      console.error('❌ Ошибка Telegram:', error);
+      logToScreen(`❌ Ошибка Telegram: ${error.message}`, 'error');
       return { ok: false, error: error.message };
     }
   }
 
   // --- Функция отправки в Google Sheets ---
   async function sendToGoogleSheets(orderData) {
+    logToScreen('📤 Начинаем отправку в Google Sheets...');
+    
     try {
-      // Форматируем товары для Google Sheets
+      // Форматируем данные для Google Sheets
       const itemsText = orderData.items.map(item => {
         let text = `${item.name} x${item.quantity} — ${item.price * item.quantity}₽`;
         if (item.teaSelection && item.teaSelection.length) {
@@ -115,10 +162,8 @@ ${orderData.items.map(item => {
         return text;
       }).join('; ');
 
-      // Считаем итог
       const total = orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-      // Для Google Apps Script нужно отправить данные в формате, который ожидает скрипт
       const sheetsData = {
         name: orderData.name,
         phone: orderData.phone,
@@ -128,38 +173,34 @@ ${orderData.items.map(item => {
         timestamp: new Date().toISOString()
       };
 
-      console.log('📤 Отправка в Google Sheets:', sheetsData);
+      logToScreen(`Данные для Google Sheets: ${JSON.stringify(sheetsData)}`);
+      logToScreen(`URL Google Sheets: ${GOOGLE_SHEETS_URL}`);
 
       const response = await fetch(GOOGLE_SHEETS_URL, {
         method: 'POST',
-        mode: 'no-cors', // Важно для GitHub Pages!
+        mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sheetsData)
       });
       
-      // При mode: 'no-cors' мы не можем прочитать response
-      // Просто считаем, что успех
+      logToScreen('✅ Запрос в Google Sheets отправлен (mode: no-cors)');
       return { success: true };
+      
     } catch (error) {
-      console.error('❌ Ошибка Google Sheets:', error);
+      logToScreen(`❌ Ошибка Google Sheets: ${error.message}`, 'error');
       return { success: false, error: error.message };
     }
   }
 
-  // --- LOAD CART FROM STORAGE ---
+  // --- LOAD/SAVE CART ---
   function loadCart() {
     const saved = localStorage.getItem('teaBombsCart');
     if (saved) {
-      try {
-        cart = JSON.parse(saved);
-      } catch (e) {
-        cart = [];
-      }
+      try { cart = JSON.parse(saved); } catch (e) { cart = []; }
     }
     updateCartUI();
   }
 
-  // --- SAVE CART TO STORAGE ---
   function saveCart() {
     localStorage.setItem('teaBombsCart', JSON.stringify(cart));
   }
@@ -236,7 +277,6 @@ ${orderData.items.map(item => {
         cartItemsContainer.appendChild(div);
       });
 
-      // Add event listeners for quantity buttons
       document.querySelectorAll('.qty-decrease').forEach(btn => {
         btn.addEventListener('click', function () {
           const index = parseInt(this.dataset.index);
@@ -274,13 +314,8 @@ ${orderData.items.map(item => {
     }
   }
 
-  function openCart() {
-    if (cartModal) cartModal.style.display = 'block';
-  }
-
-  function closeModal(modal) {
-    if (modal) modal.style.display = 'none';
-  }
+  function openCart() { if (cartModal) cartModal.style.display = 'block'; }
+  function closeModal(modal) { if (modal) modal.style.display = 'none'; }
 
   if (cartBtn) cartBtn.addEventListener('click', openCart);
 
@@ -293,9 +328,7 @@ ${orderData.items.map(item => {
   }
 
   document.querySelectorAll('.close-modal').forEach(btn => {
-    btn.addEventListener('click', function () {
-      closeModal(this.closest('.modal'));
-    });
+    btn.addEventListener('click', function () { closeModal(this.closest('.modal')); });
   });
 
   window.addEventListener('click', (e) => {
@@ -344,10 +377,8 @@ ${orderData.items.map(item => {
   if (confirmQuantityBtn) {
     confirmQuantityBtn.addEventListener('click', () => {
       if (!currentProduct) return;
-
       currentProduct.quantity = parseInt(qtyInput.value) || 1;
       closeModal(quantityModal);
-
       if (currentProduct.type === 'simple') {
         addToCartDirect(currentProduct);
       } else {
@@ -454,37 +485,30 @@ ${orderData.items.map(item => {
     if (!name || name.length < 2 || name.length > 100) {
       return { isValid: false, message: 'Имя должно содержать от 2 до 100 символов' };
     }
-
     const nameRegex = /^[A-Za-zА-Яа-яЁё\s-]+$/;
     if (!nameRegex.test(name)) {
       return { isValid: false, message: 'Имя может содержать только буквы, пробел и дефис' };
     }
-
     return { isValid: true, message: '' };
   }
 
   function validatePhone(phone) {
     const digits = phone.replace(/\D/g, '');
-
     if (digits.length !== 11) {
       return { isValid: false, message: 'Телефон должен содержать 11 цифр' };
     }
-
     if (digits[0] !== '7' && digits[0] !== '8') {
       return { isValid: false, message: 'Номер должен начинаться с 7 или 8' };
     }
-
     return { isValid: true, message: '' };
   }
 
   function validateEmail(email) {
     if (!email) return { isValid: true, message: '' };
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return { isValid: false, message: 'Введите корректный email (например: name@domain.ru)' };
     }
-
     return { isValid: true, message: '' };
   }
 
@@ -497,28 +521,16 @@ ${orderData.items.map(item => {
 
   function formatPhone(input) {
     let value = input.value.replace(/\D/g, '');
-
     if (value.length === 0) {
       input.value = '';
       return;
     }
-
     if (value[0] === '7' || value[0] === '8') {
       let formatted = '+7';
-
-      if (value.length > 1) {
-        formatted += ' (' + value.substring(1, 4);
-      }
-      if (value.length >= 4) {
-        formatted += ') ' + value.substring(4, 7);
-      }
-      if (value.length >= 7) {
-        formatted += '-' + value.substring(7, 9);
-      }
-      if (value.length >= 9) {
-        formatted += '-' + value.substring(9, 11);
-      }
-
+      if (value.length > 1) formatted += ' (' + value.substring(1, 4);
+      if (value.length >= 4) formatted += ') ' + value.substring(4, 7);
+      if (value.length >= 7) formatted += '-' + value.substring(7, 9);
+      if (value.length >= 9) formatted += '-' + value.substring(9, 11);
       input.value = formatted;
     } else {
       input.value = value;
@@ -532,7 +544,6 @@ ${orderData.items.map(item => {
       return;
     }
 
-    // Создаем элементы для ошибок, если их нет в HTML
     function ensureErrorElement(inputId, errorId) {
       if (!document.getElementById(errorId)) {
         const input = document.getElementById(inputId);
@@ -550,7 +561,6 @@ ${orderData.items.map(item => {
     ensureErrorElement('email', 'email-error');
     ensureErrorElement('comment', 'comment-error');
 
-    // Устанавливаем маску для телефона
     phoneInput.addEventListener('input', function () {
       formatPhone(this);
       validateField(this, validatePhone, 'phone-error');
@@ -606,9 +616,7 @@ ${orderData.items.map(item => {
         input.offsetHeight;
         input.style.animation = 'shake 0.3s ease-in-out';
 
-        setTimeout(() => {
-          input.style.animation = '';
-        }, 300);
+        setTimeout(() => { input.style.animation = ''; }, 300);
       }
 
       updateSubmitButton();
@@ -619,25 +627,15 @@ ${orderData.items.map(item => {
       const phoneValid = validatePhone(phoneInput.value).isValid;
       const emailValid = emailInput ? validateEmail(emailInput.value).isValid : true;
       const commentValid = commentInput ? validateComment(commentInput.value).isValid : true;
-
       return nameValid && phoneValid && emailValid && commentValid;
     }
 
     function updateSubmitButton() {
       submitBtn.disabled = !isFormValid();
-      
-      if (nameInput.value === '') {
-        nameInput.classList.remove('valid', 'invalid');
-      }
-      if (phoneInput.value === '') {
-        phoneInput.classList.remove('valid', 'invalid');
-      }
-      if (emailInput && emailInput.value === '') {
-        emailInput.classList.remove('valid', 'invalid');
-      }
-      if (commentInput && commentInput.value === '') {
-        commentInput.classList.remove('valid', 'invalid');
-      }
+      if (nameInput.value === '') nameInput.classList.remove('valid', 'invalid');
+      if (phoneInput.value === '') phoneInput.classList.remove('valid', 'invalid');
+      if (emailInput && emailInput.value === '') emailInput.classList.remove('valid', 'invalid');
+      if (commentInput && commentInput.value === '') commentInput.classList.remove('valid', 'invalid');
     }
 
     updateSubmitButton();
@@ -646,13 +644,20 @@ ${orderData.items.map(item => {
 
     const submitHandler = async (e) => {
       e.preventDefault();
+      
+      // Показываем панель отладки
+      addDebugPanel();
+      showDebugPanel();
+      logToScreen('🚀 Начинаем обработку заказа...');
     
       if (!isFormValid()) {
+        logToScreen('❌ Форма не прошла валидацию', 'error');
         alert('Пожалуйста, исправьте ошибки в форме');
         return;
       }
 
       if (cart.length === 0) {
+        logToScreen('❌ Корзина пуста', 'error');
         alert('Корзина пуста. Добавьте товары перед заказом.');
         return;
       }
@@ -680,9 +685,9 @@ ${orderData.items.map(item => {
           }))
         };
     
-        console.log('📤 Отправка заказа в Telegram и Google Sheets...');
-        console.log('Данные заказа:', orderData);
+        logToScreen(`📦 Данные заказа: ${JSON.stringify(orderData)}`);
         
+        // Запускаем оба запроса параллельно
         const [telegramResult, sheetsResult] = await Promise.allSettled([
           sendToTelegram(orderData),
           sendToGoogleSheets(orderData)
@@ -697,18 +702,18 @@ ${orderData.items.map(item => {
             : { success: false, error: sheetsResult.reason?.message }
         };
     
-        console.log('📊 Результаты отправки:', results);
+        logToScreen(`📊 Результаты: Telegram OK:${results.telegram.success}, Sheets OK:${results.sheets.success}`);
     
         if (results.telegram.success || results.sheets.success) {
           let successMessage = '✅ Спасибо! Ваш заказ принят.';
           
           if (!results.telegram.success) {
-            console.warn('⚠️ Telegram не ответил, но данные сохранены в Google Sheets');
-            successMessage = '✅ Спасибо! Ваш заказ принят.';
+            logToScreen('⚠️ Telegram не ответил, но Sheets работает', 'warning');
+            successMessage = '✅ Спасибо! Заказ принят.';
           }
           
           if (!results.sheets.success) {
-            console.warn('⚠️ Google Sheets не ответил, но уведомление в Telegram отправлено');
+            logToScreen('⚠️ Google Sheets не ответил, но Telegram работает', 'warning');
           }
           
           alert(successMessage);
@@ -739,13 +744,13 @@ ${orderData.items.map(item => {
           if (cartModal) closeModal(cartModal);
           
         } else {
-          console.error('❌ Оба канала не сработали:', results);
-          alert('❌ Произошла ошибка при отправке. Пожалуйста, попробуйте позже или свяжитесь с нами по телефону.');
+          logToScreen('❌ Оба канала не сработали!', 'error');
+          alert('❌ Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
         }
         
       } catch (error) {
-        console.error('❌ Критическая ошибка:', error);
-        alert('❌ Произошла ошибка при отправке. Пожалуйста, попробуйте позже или свяжитесь с нами по телефону.');
+        logToScreen(`❌ Критическая ошибка: ${error.message}`, 'error');
+        alert('❌ Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
@@ -764,14 +769,11 @@ ${orderData.items.map(item => {
   // --- FAQ ACCORDION ---
   function initFaqAccordion() {
     const faqItems = document.querySelectorAll('.faq-item');
-
     faqItems.forEach(item => {
       const question = item.querySelector('.faq-question');
       if (!question) return;
-
       question.addEventListener('click', () => {
         const isActive = item.classList.contains('active');
-
         if (!isActive) {
           item.classList.add('active');
         } else {
@@ -796,6 +798,7 @@ ${orderData.items.map(item => {
     document.querySelectorAll('.fade-in-section').forEach(section => observer.observe(section));
     initFaqAccordion();
     setupFormValidation();
+    addDebugPanel(); // Добавляем панель отладки
   });
 
 })();
