@@ -1,9 +1,9 @@
 (function () {
   'use strict';
 
-  const TELEGRAM_TOKEN = 'ВАШ_ТОКЕН_БОТА'; // От @BotFather
-  const TELEGRAM_CHAT_ID = 'ВАШ_CHAT_ID';  // От @userinfobot
-  const GOOGLE_SHEETS_URL = 'ВАШ_URL_GOOGLE_APPS_SCRIPT'; // Из предыдущего шага
+  const TELEGRAM_TOKEN = '8728324632:AAGmFAmQEXR2g28nrxXsDFugLUMp0ilbZIw'; // От @BotFather
+  const TELEGRAM_CHAT_ID = '276229119';  // От @userinfobot
+  const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwXKy9ut77nQpWy8GDa5YcpUuKxrTo9tamNEo1BqgvpjvuRoyHMx61RXOJLG3OVxXZH/exec'; // Из предыдущего шага
 
   // --- TEA FLAVORS DATA ---
   const teaFlavors = [
