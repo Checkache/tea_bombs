@@ -3,7 +3,7 @@
 
   // --- КОНФИГУРАЦИЯ ---
   const TELEGRAM_TOKEN = '8728324632:AAGmFAmQEXR2g28nrxXsDFugLUMp0ilbZIw';
-  const TELEGRAM_CHAT_ID = '8728324632'; // Убедитесь, что это правильный CHAT ID, а не токен!
+  const TELEGRAM_CHAT_ID = '276229119'; // Убедитесь, что это правильный CHAT ID, а не токен!
   const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwXKy9ut77nQpWy8GDa5YcpUuKxrTo9tamNEo1BqgvpjvuRoyHMx61RXOJLG3OVxXZH/exec';
 
   // Для отладки - создадим панель с логами
