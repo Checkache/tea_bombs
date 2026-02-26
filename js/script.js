@@ -2,7 +2,7 @@
   'use strict';
 
   const TELEGRAM_TOKEN = '8728324632:AAGmFAmQEXR2g28nrxXsDFugLUMp0ilbZIw';
-  const TELEGRAM_CHAT_ID = '276229119';
+  const TELEGRAM_CHAT_IDS = ['276229119', '5494302874'];
   const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwXKy9ut77nQpWy8GDa5YcpUuKxrTo9tamNEo1BqgvpjvuRoyHMx61RXOJLG3OVxXZH/exec';
 
   function escapeForSheets(value) {
@@ -75,17 +75,22 @@ ${orderData.items.map(item => {
 📅 ${new Date().toLocaleString('ru-RU')}`;
 
       const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHAT_ID,
-          text: message,
-          parse_mode: 'Markdown'
-        })
-      });
+      const results = await Promise.allSettled(
+        TELEGRAM_CHAT_IDS.map(chatId =>
+          fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: message,
+              parse_mode: 'Markdown'
+            })
+          }).then(r => r.json())
+        )
+      );
 
-      return await response.json();
+      const first = results.find(r => r.status === 'fulfilled' && r.value?.ok);
+      return first ? first.value : (results[0]?.value || { ok: false });
     } catch (error) {
       return { ok: false, error: error.message };
     }
