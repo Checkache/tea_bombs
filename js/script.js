@@ -47,6 +47,14 @@
     console.log(`[${type.toUpperCase()}] ${msg}`);
   }
 
+  // Экранирование значений для Google Sheets (защита от формул)
+  function escapeForSheets(value) {
+    if (typeof value === 'string' && /^[=+\-@]/.test(value)) {
+      return "'" + value;
+    }
+    return value;
+  }
+
   function showDebugPanel() {
     const panel = document.getElementById('debug-panel');
     if (panel) panel.style.display = 'block';
@@ -156,7 +164,7 @@ ${orderData.items.map(item => {
       // Apps Script ожидает массив items (name, price, quantity, teaSelection), не строку
       const sheetsData = {
         name: orderData.name,
-        phone: orderData.phone,
+        phone: escapeForSheets(orderData.phone),
         email: orderData.email || '',
         items: orderData.items.map(item => ({
           name: item.name,
