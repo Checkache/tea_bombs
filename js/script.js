@@ -1,53 +1,10 @@
 (function () {
   'use strict';
 
-  // --- КОНФИГУРАЦИЯ ---
   const TELEGRAM_TOKEN = '8728324632:AAGmFAmQEXR2g28nrxXsDFugLUMp0ilbZIw';
-  const TELEGRAM_CHAT_ID = '276229119'; // Убедитесь, что это правильный CHAT ID, а не токен!
+  const TELEGRAM_CHAT_ID = '276229119';
   const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwXKy9ut77nQpWy8GDa5YcpUuKxrTo9tamNEo1BqgvpjvuRoyHMx61RXOJLG3OVxXZH/exec';
 
-  // Для отладки - создадим панель с логами
-  function addDebugPanel() {
-    if (document.getElementById('debug-panel')) return;
-    
-    const panel = document.createElement('div');
-    panel.id = 'debug-panel';
-    panel.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 300px;
-      max-height: 400px;
-      overflow-y: auto;
-      background: rgba(0,0,0,0.8);
-      color: #0f0;
-      font-family: monospace;
-      font-size: 12px;
-      padding: 10px;
-      border-radius: 5px;
-      z-index: 9999;
-      display: none;
-    `;
-    panel.innerHTML = '<h4 style="margin:0 0 10px;color:#fff;">🔍 Лог отправки</h4><div id="debug-log"></div>';
-    document.body.appendChild(panel);
-  }
-  
-  function logToScreen(msg, type = 'info') {
-    const logDiv = document.getElementById('debug-log');
-    if (!logDiv) return;
-    
-    const colors = { info: '#0f0', error: '#f00', warning: '#ff0' };
-    const entry = document.createElement('div');
-    entry.style.cssText = `color: ${colors[type]}; margin: 2px 0; border-bottom: 1px solid #333; padding: 2px;`;
-    entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    logDiv.appendChild(entry);
-    logDiv.scrollTop = logDiv.scrollHeight;
-    
-    // Также пишем в консоль
-    console.log(`[${type.toUpperCase()}] ${msg}`);
-  }
-
-  // Экранирование значений для Google Sheets (защита от формул)
   function escapeForSheets(value) {
     if (typeof value === 'string' && /^[=+\-@]/.test(value)) {
       return "'" + value;
@@ -55,24 +12,16 @@
     return value;
   }
 
-  function showDebugPanel() {
-    const panel = document.getElementById('debug-panel');
-    if (panel) panel.style.display = 'block';
-  }
-
-  // --- TEA FLAVORS DATA ---
   const teaFlavors = [
     'Имбирный лимон', 'Айва с персиком', 'Манговый рай', 'Хамелеон',
     'Пина Колада', 'Пуэр Лесные ягоды', 'Таежный', 'Мишки Гамми',
     '1001 Ночь', 'Манго Улун', 'Ганпаудер', 'Анчан'
   ];
 
-  // --- STATE ---
   let cart = [];
   let currentProduct = null;
   let selectedTeas = [];
 
-  // --- DOM ELEMENTS ---
   const loader = document.getElementById('page-loader');
   const navToggle = document.getElementById('navToggle');
   const nav = document.getElementById('nav');
@@ -93,7 +42,6 @@
   const qtyIncrease = document.getElementById('qtyIncrease');
   const confirmQuantityBtn = document.getElementById('confirmQuantity');
 
-  // Элементы формы
   const contactForm = document.getElementById('contactForm');
   const nameInput = document.getElementById('name');
   const phoneInput = document.getElementById('phone');
@@ -103,14 +51,11 @@
   const commentCount = document.getElementById('comment-count');
   const charCounter = document.querySelector('.char-counter');
 
-  // --- Функция отправки в Telegram ---
   async function sendToTelegram(orderData) {
-    logToScreen('📤 Начинаем отправку в Telegram...');
-    
     try {
-      const message = 
+      const message =
 `🆕 *НОВЫЙ ЗАКАЗ С САЙТА*
-    
+
 👤 *Клиент:* ${orderData.name}
 📞 *Телефон:* ${orderData.phone}
 📧 *Email:* ${orderData.email || 'не указан'}
@@ -129,11 +74,7 @@ ${orderData.items.map(item => {
 
 📅 ${new Date().toLocaleString('ru-RU')}`;
 
-      logToScreen(`Telegram URL: https://api.telegram.org/bot${TELEGRAM_TOKEN.substring(0,10)}.../sendMessage`);
-      logToScreen(`Chat ID: ${TELEGRAM_CHAT_ID}`);
-
       const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-      
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -143,29 +84,20 @@ ${orderData.items.map(item => {
           parse_mode: 'Markdown'
         })
       });
-      
-      logToScreen(`Статус ответа Telegram: ${response.status}`);
-      
-      const result = await response.json();
-      logToScreen(`Ответ Telegram: ${JSON.stringify(result)}`);
-      
-      return result;
+
+      return await response.json();
     } catch (error) {
-      logToScreen(`❌ Ошибка Telegram: ${error.message}`, 'error');
       return { ok: false, error: error.message };
     }
   }
 
-  // --- Функция отправки в Google Sheets ---
   async function sendToGoogleSheets(orderData) {
-    logToScreen('📤 Начинаем отправку в Google Sheets...');
-    
     try {
-      // Apps Script ожидает массив items (name, price, quantity, teaSelection), не строку
       const sheetsData = {
         name: orderData.name,
         phone: escapeForSheets(orderData.phone),
         email: orderData.email || '',
+        comment: orderData.comment || '',
         items: orderData.items.map(item => ({
           name: item.name,
           price: item.price,
@@ -174,42 +106,26 @@ ${orderData.items.map(item => {
         }))
       };
 
-      logToScreen(`Данные для Google Sheets: ${JSON.stringify(sheetsData)}`);
-      logToScreen(`URL Google Sheets: ${GOOGLE_SHEETS_URL}`);
-
-      // Content-Type: text/plain — «простой» запрос без CORS preflight (OPTIONS).
-      // Без no-cors можно прочитать ответ и убедиться, что строка добавлена.
       const response = await fetch(GOOGLE_SHEETS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(sheetsData)
       });
-      
+
       const responseText = await response.text();
-      logToScreen(`Ответ Google Sheets (${response.status}): ${responseText}`);
-      
       let result;
       try {
         result = JSON.parse(responseText);
       } catch (_) {
         result = { success: false, error: responseText || 'Неверный ответ сервера' };
       }
-      
-      if (result.success) {
-        logToScreen('✅ Заказ добавлен в таблицу');
-      } else {
-        logToScreen(`❌ Google Sheets: ${result.error || result.message}`, 'error');
-      }
-      
+
       return { success: !!result.success, error: result.error };
-      
     } catch (error) {
-      logToScreen(`❌ Ошибка Google Sheets: ${error.message}`, 'error');
       return { success: false, error: error.message };
     }
   }
 
-  // --- LOAD/SAVE CART ---
   function loadCart() {
     const saved = localStorage.getItem('teaBombsCart');
     if (saved) {
@@ -222,7 +138,6 @@ ${orderData.items.map(item => {
     localStorage.setItem('teaBombsCart', JSON.stringify(cart));
   }
 
-  // --- SCROLL ANIMATIONS ---
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -232,7 +147,6 @@ ${orderData.items.map(item => {
     });
   }, { threshold: 0.1 });
 
-  // --- HEADER & NAV ---
   if (navToggle && nav) {
     navToggle.addEventListener('click', () => {
       nav.classList.toggle('open');
@@ -250,7 +164,6 @@ ${orderData.items.map(item => {
     if (header) header.classList.toggle('scrolled', window.scrollY > 20);
   }, { passive: true });
 
-  // --- CART LOGIC ---
   function updateCartUI() {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     if (cartCountEl) {
@@ -352,7 +265,6 @@ ${orderData.items.map(item => {
     if (e.target.classList.contains('modal')) closeModal(e.target);
   });
 
-  // --- QUANTITY MODAL ---
   function openQuantityModal(product) {
     currentProduct = product;
     currentProduct.quantity = 1;
@@ -404,7 +316,6 @@ ${orderData.items.map(item => {
     });
   }
 
-  // --- TEA SELECTION LOGIC ---
   document.querySelectorAll('.js-add-to-cart').forEach(btn => {
     btn.addEventListener('click', function () {
       const card = this.closest('.product-card');
@@ -497,7 +408,6 @@ ${orderData.items.map(item => {
     teaSelectModal.style.display = 'block';
   }
 
-  // --- VALIDATION FUNCTIONS ---
   function validateName(name) {
     if (!name || name.length < 2 || name.length > 100) {
       return { isValid: false, message: 'Имя должно содержать от 2 до 100 символов' };
@@ -554,12 +464,8 @@ ${orderData.items.map(item => {
     }
   }
 
-  // --- SETUP FORM VALIDATION ---
   function setupFormValidation() {
-    if (!contactForm || !nameInput || !phoneInput || !submitBtn) {
-      console.warn('⚠️ Элементы формы не найдены');
-      return;
-    }
+    if (!contactForm || !nameInput || !phoneInput || !submitBtn) return;
 
     function ensureErrorElement(inputId, errorId) {
       if (!document.getElementById(errorId)) {
@@ -596,10 +502,8 @@ ${orderData.items.map(item => {
     if (commentInput && commentCount && charCounter) {
       commentInput.addEventListener('input', function () {
         validateField(this, validateComment, 'comment-error');
-
         const length = this.value.length;
         commentCount.textContent = length;
-
         if (length > 280 && length <= 300) {
           charCounter.classList.add('warning');
           charCounter.classList.remove('danger');
@@ -628,11 +532,9 @@ ${orderData.items.map(item => {
         input.classList.remove('valid');
         errorEl.textContent = result.message;
         errorEl.classList.add('visible');
-
         input.style.animation = 'none';
         input.offsetHeight;
         input.style.animation = 'shake 0.3s ease-in-out';
-
         setTimeout(() => { input.style.animation = ''; }, 300);
       }
 
@@ -661,39 +563,32 @@ ${orderData.items.map(item => {
 
     const submitHandler = async (e) => {
       e.preventDefault();
-      
-      // Показываем панель отладки
-      addDebugPanel();
-      showDebugPanel();
-      logToScreen('🚀 Начинаем обработку заказа...');
-    
+
       if (!isFormValid()) {
-        logToScreen('❌ Форма не прошла валидацию', 'error');
         alert('Пожалуйста, исправьте ошибки в форме');
         return;
       }
 
       if (cart.length === 0) {
-        logToScreen('❌ Корзина пуста', 'error');
         alert('Корзина пуста. Добавьте товары перед заказом.');
         return;
       }
-    
+
       const name = nameInput.value.trim();
       const phone = phoneInput.value.trim();
       const email = emailInput ? emailInput.value.trim() : '';
       const comment = commentInput ? commentInput.value.trim() : '';
-    
+
       const originalText = submitBtn.textContent;
       submitBtn.disabled = true;
       submitBtn.textContent = 'Отправка...';
-    
+
       try {
         const orderData = {
-          name: name,
-          phone: phone,
-          email: email,
-          comment: comment,
+          name,
+          phone,
+          email,
+          comment,
           items: cart.map(item => ({
             name: item.name,
             price: item.price,
@@ -701,55 +596,38 @@ ${orderData.items.map(item => {
             teaSelection: item.teaSelection || []
           }))
         };
-    
-        logToScreen(`📦 Данные заказа: ${JSON.stringify(orderData)}`);
-        
-        // Запускаем оба запроса параллельно
+
         const [telegramResult, sheetsResult] = await Promise.allSettled([
           sendToTelegram(orderData),
           sendToGoogleSheets(orderData)
         ]);
-    
+
         const results = {
-          telegram: telegramResult.status === 'fulfilled' 
-            ? { success: telegramResult.value?.ok === true, data: telegramResult.value }
-            : { success: false, error: telegramResult.reason?.message },
+          telegram: telegramResult.status === 'fulfilled'
+            ? { success: telegramResult.value?.ok === true }
+            : { success: false },
           sheets: sheetsResult.status === 'fulfilled'
-            ? { success: sheetsResult.value?.success === true, error: sheetsResult.value?.error }
-            : { success: false, error: sheetsResult.reason?.message }
+            ? { success: sheetsResult.value?.success === true }
+            : { success: false }
         };
-    
-        logToScreen(`📊 Результаты: Telegram OK:${results.telegram.success}, Sheets OK:${results.sheets.success}`);
-    
+
         if (results.telegram.success || results.sheets.success) {
-          let successMessage = '✅ Спасибо! Ваш заказ принят.';
-          
-          if (!results.telegram.success) {
-            logToScreen('⚠️ Telegram не ответил, но Sheets работает', 'warning');
-            successMessage = '✅ Спасибо! Заказ принят.';
-          }
-          
-          if (!results.sheets.success) {
-            logToScreen('⚠️ Google Sheets не ответил, но Telegram работает', 'warning');
-          }
-          
-          alert(successMessage);
-    
+          alert('✅ Спасибо! Ваш заказ принят.');
+
           cart = [];
           saveCart();
           updateCartUI();
-    
           contactForm.reset();
           if (commentCount) commentCount.textContent = '0';
           if (charCounter) charCounter.classList.remove('warning', 'danger');
-    
+
           [nameInput, phoneInput, emailInput, commentInput].forEach(input => {
             if (input) {
               input.classList.remove('valid', 'invalid');
               input.style.animation = '';
             }
           });
-    
+
           ['name-error', 'phone-error', 'email-error', 'comment-error'].forEach(id => {
             const errorEl = document.getElementById(id);
             if (errorEl) {
@@ -757,16 +635,12 @@ ${orderData.items.map(item => {
               errorEl.classList.remove('visible');
             }
           });
-    
+
           if (cartModal) closeModal(cartModal);
-          
         } else {
-          logToScreen('❌ Оба канала не сработали!', 'error');
           alert('❌ Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
         }
-        
       } catch (error) {
-        logToScreen(`❌ Критическая ошибка: ${error.message}`, 'error');
         alert('❌ Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
       } finally {
         submitBtn.disabled = false;
@@ -774,33 +648,26 @@ ${orderData.items.map(item => {
         updateSubmitButton();
       }
     };
-    
+
     if (contactForm._submitHandler) {
       contactForm.removeEventListener('submit', contactForm._submitHandler);
     }
-    
+
     contactForm._submitHandler = submitHandler;
     contactForm.addEventListener('submit', submitHandler);
   }
 
-  // --- FAQ ACCORDION ---
   function initFaqAccordion() {
     const faqItems = document.querySelectorAll('.faq-item');
     faqItems.forEach(item => {
       const question = item.querySelector('.faq-question');
       if (!question) return;
       question.addEventListener('click', () => {
-        const isActive = item.classList.contains('active');
-        if (!isActive) {
-          item.classList.add('active');
-        } else {
-          item.classList.remove('active');
-        }
+        item.classList.toggle('active');
       });
     });
   }
 
-  // --- INITIALIZATION ---
   window.addEventListener('load', () => {
     setTimeout(() => {
       if (loader) {
@@ -815,7 +682,6 @@ ${orderData.items.map(item => {
     document.querySelectorAll('.fade-in-section').forEach(section => observer.observe(section));
     initFaqAccordion();
     setupFormValidation();
-    addDebugPanel(); // Добавляем панель отладки
   });
 
 })();
