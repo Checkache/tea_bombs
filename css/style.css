@@ -1481,3 +1481,15 @@ section {
   margin-top: 0.5rem;
   font-style: italic;
 }
+
+.cart-item-qty button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.cart-item-qty button:disabled:hover {
+  background: transparent;
+  color: var(--color-sage);
+  transform: none;
+}
