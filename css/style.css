@@ -1474,3 +1474,10 @@ section {
 .validation-message.visible {
   animation: shake 0.3s ease-in-out;
 }
+
+.product-min-info {
+  font-size: 0.8rem;
+  color: var(--color-sage);
+  margin-top: 0.5rem;
+  font-style: italic;
+}

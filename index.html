@@ -113,8 +113,9 @@
         </article>
 
         <!-- Товар: Конфеты (Без выбора чая) -->
-        <article class="product-card" data-id="2" data-type="simple" data-price="25">
+        <article class="product-card" data-id="2" data-type="simple" data-price="25" data-min-quantity="30">
           <div class="product-image"><img src="images/sweets.jpg" alt="Мини конфеты"></div>
+          <div class="product-min-info">Минимальный заказ: 30 шт</div>
           <div class="product-info">
             <h3 class="product-name font-accent">Мини конфеты с логотипом</h3>
             <p class="product-composition">Конфеты из изомальта с вашим логотипом</p>
@@ -160,12 +161,25 @@
 
         <!-- Товар: Набор 6 шт -->
         <article class="product-card" data-id="6" data-type="set" data-count="6" data-price="1600">
-          <div class="product-image"><img src="images/6-bombs.jpg" alt="Набор 6 бомбочек"></div>
+          <div class="product-image"><img src="images/1-bomb.jpg" alt="Набор 6 бомбочек"></div>
           <div class="product-info">
             <h3 class="product-name font-accent">Набор из 6 чайных бомбочек</h3>
             <p class="product-composition">Чай на выбор из чайной карты, подарочная упаковка, мини открытка, крафт пакет
             </p>
             <p class="product-price">1600 ₽</p>
+            <button type="button" class="btn-buy js-add-to-cart">В корзину</button>
+          </div>
+        </article>
+
+        <!-- Товар: 1 шт -->
+        <article class="product-card" data-id="7" data-type="simple" data-count="7" data-price="400" data-min-quantity="5">
+          <div class="product-image"><img src="images/6-bombs.jpg" alt="Чайная бомбочка 1 шт"></div>
+          <div class="product-min-info">Минимальный заказ: 5 шт</div>
+          <div class="product-info">
+            <h3 class="product-name font-accent">Чайная бомбочка 1 шт</h3>
+            <p class="product-composition">Чай на выбор из чайной карты, подарочная упаковка, мини открытка, крафт пакет. При заказе от 5 шт.
+            </p>
+            <p class="product-price">400 ₽</p>
             <button type="button" class="btn-buy js-add-to-cart">В корзину</button>
           </div>
         </article>

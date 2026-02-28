@@ -270,43 +270,59 @@ ${orderData.items.map(item => {
     if (e.target.classList.contains('modal')) closeModal(e.target);
   });
 
-  function openQuantityModal(product) {
-    currentProduct = product;
-    currentProduct.quantity = 1;
-    if (qtyInput) qtyInput.value = 1;
-    if (quantityProductName) quantityProductName.textContent = product.name;
-    if (quantityModal) quantityModal.style.display = 'block';
+function openQuantityModal(product) {
+  currentProduct = product;
+  currentProduct.quantity = product.minQuantity || 1;   
+  if (qtyInput) {
+    qtyInput.value = currentProduct.quantity;
+    qtyInput.min = product.minQuantity || 1;
+    qtyInput.max = 500;
   }
+  if (quantityProductName) {
+    quantityProductName.textContent = `${product.name} (мин. ${product.minQuantity} шт)`;
+  }
+  if (quantityModal) quantityModal.style.display = 'block';
+}
 
   if (qtyDecrease) {
-    qtyDecrease.addEventListener('click', () => {
-      const val = parseInt(qtyInput.value) || 1;
-      if (val > 1) {
-        qtyInput.value = val - 1;
-        if (currentProduct) currentProduct.quantity = val - 1;
-      }
-    });
-  }
+  qtyDecrease.addEventListener('click', () => {
+    const val = parseInt(qtyInput.value) || currentProduct?.minQuantity || 1;
+    const minQty = currentProduct?.minQuantity || 1;
+    
+    if (val > minQty) {
+      qtyInput.value = val - 1;
+      if (currentProduct) currentProduct.quantity = val - 1;
+    } else {
+      alert(`Минимальное количество: ${minQty} шт`);
+    }
+  });
+}
 
-  if (qtyIncrease) {
-    qtyIncrease.addEventListener('click', () => {
-      const val = parseInt(qtyInput.value) || 1;
-      if (val < 500) {
-        qtyInput.value = val + 1;
-        if (currentProduct) currentProduct.quantity = val + 1;
-      }
-    });
-  }
+if (qtyIncrease) {
+  qtyIncrease.addEventListener('click', () => {
+    const val = parseInt(qtyInput.value) || currentProduct?.minQuantity || 1;
+    if (val < 500) {
+      qtyInput.value = val + 1;
+      if (currentProduct) currentProduct.quantity = val + 1;
+    }
+  });
+}
 
-  if (qtyInput) {
-    qtyInput.addEventListener('change', () => {
-      let val = parseInt(qtyInput.value);
-      if (isNaN(val) || val < 1) val = 1;
-      if (val > 500) val = 500;
-      qtyInput.value = val;
-      if (currentProduct) currentProduct.quantity = val;
-    });
-  }
+if (qtyInput) {
+  qtyInput.addEventListener('change', () => {
+    let val = parseInt(qtyInput.value);
+    const minQty = currentProduct?.minQuantity || 1;
+    
+    if (isNaN(val) || val < minQty) {
+      val = minQty;
+      alert(`Минимальное количество: ${minQty} шт`);
+    }
+    if (val > 500) val = 500;
+    
+    qtyInput.value = val;
+    if (currentProduct) currentProduct.quantity = val;
+  });
+}
 
   if (confirmQuantityBtn) {
     confirmQuantityBtn.addEventListener('click', () => {
@@ -321,43 +337,50 @@ ${orderData.items.map(item => {
     });
   }
 
-  document.querySelectorAll('.js-add-to-cart').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const card = this.closest('.product-card');
-      if (!card) return;
+document.querySelectorAll('.js-add-to-cart').forEach(btn => {
+  btn.addEventListener('click', function () {
+    const card = this.closest('.product-card');
+    if (!card) return;
 
-      const type = card.dataset.type;
-      const count = parseInt(card.dataset.count) || 1;
+    const type = card.dataset.type;
+    const count = parseInt(card.dataset.count) || 1;
+    const minQuantity = parseInt(card.dataset.minQuantity) || 1; // Читаем минимальное количество
 
-      const product = {
-        id: card.dataset.id,
-        name: card.querySelector('.product-name')?.textContent || 'Товар',
-        price: parseInt(card.dataset.price) || 0,
-        type: type,
-        count: count,
-        quantity: 1
-      };
+    const product = {
+      id: card.dataset.id,
+      name: card.querySelector('.product-name')?.textContent || 'Товар',
+      price: parseInt(card.dataset.price) || 0,
+      type: type,
+      count: count,
+      minQuantity: minQuantity, // Сохраняем в продукте
+      quantity: minQuantity // Устанавливаем начальное количество = минимальному
+    };
 
-      openQuantityModal(product);
-    });
+    openQuantityModal(product);
   });
+});
 
   function addToCartDirect(product) {
-    const existingIndex = cart.findIndex(item =>
-      item.id === product.id &&
-      JSON.stringify(item.teaSelection) === JSON.stringify(product.teaSelection)
-    );
-
-    if (existingIndex > -1) {
-      cart[existingIndex].quantity += product.quantity;
-    } else {
-      cart.push({ ...product });
-    }
-
-    saveCart();
-    updateCartUI();
-    openCart();
+  if (product.quantity < (product.minQuantity || 1)) {
+    alert(`Минимальное количество для "${product.name}": ${product.minQuantity} шт`);
+    return;
   }
+
+  const existingIndex = cart.findIndex(item =>
+    item.id === product.id &&
+    JSON.stringify(item.teaSelection) === JSON.stringify(product.teaSelection)
+  );
+
+  if (existingIndex > -1) {
+    cart[existingIndex].quantity += product.quantity;
+  } else {
+    cart.push({ ...product });
+  }
+
+  saveCart();
+  updateCartUI();
+  openCart();
+}
 
   function openTeaSelectionModal(product) {
     if (!teaSlotsContainer || !teaSelectModal) return;
