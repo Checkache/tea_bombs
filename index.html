@@ -113,12 +113,16 @@
         </article>
 
          <!-- Товар: Шоколадные батончики -->
-        <article class="product-card" data-id="8" data-type="simple" data-count="8" data-price="700">
+        <article class="product-card" data-id="8" data-type="simple" data-count="8" data-variants='{"с орехами":850,"с ягодами":1200}'>
           <div class="product-image"><img src="images/chocolads.jpg" alt="Шоколадные батончики к чаю"></div>
           <div class="product-info">
-            <h3 class="product-name font-accent">Набор из 12 шоколадных батончиков с орехами</h3>
-            <p class="product-composition">Шоколад бельгийский Callebaut, орехи (фундук, миндаль, кешью)
+            <h3 class="product-name font-accent">Набор шоколадных батончиков</h3>
+            <p class="product-composition">Шоколад бельгийский Callebaut, орехи (фундук, миндаль, кешью) или ягоды (голубика, малина, гранат)
             </p>
+            <select class="product-variant-select js-chocolate-variant" aria-label="Выберите вариант">
+              <option value="с орехами">с орехами — 850 ₽</option>
+              <option value="с ягодами">с ягодами — 1200 ₽</option>
+            </select>
             <p class="product-price">850 ₽</p>
             <button type="button" class="btn-buy js-add-to-cart">В корзину</button>
           </div>
