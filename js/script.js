@@ -385,6 +385,16 @@ ${orderData.items
     });
   }
 
+  document.querySelectorAll(".js-chocolate-variant").forEach((select) => {
+    select.addEventListener("change", function () {
+      const card = this.closest(".product-card");
+      const variants = card?.dataset.variants ? JSON.parse(card.dataset.variants) : null;
+      if (!variants || !this.value) return;
+      const priceEl = card?.querySelector(".product-price");
+      if (priceEl) priceEl.textContent = variants[this.value] + " ₽";
+    });
+  });
+
   document.querySelectorAll(".js-add-to-cart").forEach((btn) => {
     btn.addEventListener("click", function () {
       const card = this.closest(".product-card");
@@ -392,16 +402,30 @@ ${orderData.items
 
       const type = card.dataset.type;
       const count = parseInt(card.dataset.count) || 1;
-      const minQuantity = parseInt(card.dataset.minQuantity) || 1; // Читаем минимальное количество
+      const minQuantity = parseInt(card.dataset.minQuantity) || 1;
+
+      let price = parseInt(card.dataset.price) || 0;
+      let teaSelection = [];
+
+      const variants = card.dataset.variants ? JSON.parse(card.dataset.variants) : null;
+      if (variants) {
+        const variantSelect = card.querySelector(".js-chocolate-variant");
+        const selected = variantSelect?.value;
+        if (selected && variants[selected] != null) {
+          price = variants[selected];
+          teaSelection = [selected];
+        }
+      }
 
       const product = {
         id: card.dataset.id,
         name: card.querySelector(".product-name")?.textContent || "Товар",
-        price: parseInt(card.dataset.price) || 0,
+        price,
         type: type,
         count: count,
-        minQuantity: minQuantity, // Сохраняем в продукте
-        quantity: minQuantity, // Устанавливаем начальное количество = минимальному
+        minQuantity: minQuantity,
+        quantity: minQuantity,
+        teaSelection,
       };
 
       openQuantityModal(product);
