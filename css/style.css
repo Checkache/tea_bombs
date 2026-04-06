@@ -1510,3 +1510,23 @@ section {
   color: var(--color-sage);
   transform: none;
 }
+
+/* --- Review Photos --- */
+.review-photo {
+  margin-top: 1rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-beige);
+}
+
+.review-photo img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.review-photo img:hover {
+  transform: scale(1.02);
+}
